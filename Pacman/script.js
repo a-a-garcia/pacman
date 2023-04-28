@@ -5,20 +5,28 @@
 */
 var world = [
     [2,2,2,2,2,2,2,2,2,2],
-    [2,1,2,1,1,1,1,2,1,2],
+    [2,0,2,1,1,1,3,2,3,2],
     [2,1,2,1,2,2,2,2,1,2],
     [2,1,2,1,1,1,1,1,1,2],
     [2,1,2,1,1,2,2,2,1,2],
-    [2,1,1,1,1,2,1,2,1,2],
+    [2,1,1,1,1,2,3,2,1,2],
     [2,1,1,2,2,2,1,2,1,2],
-    [2,1,1,1,1,1,1,2,1,2],
+    [2,3,1,1,1,1,1,2,4,2],
     [2,2,2,2,2,2,2,2,2,2]
 ];
 
 var pacman = {
-    x: 21,
-    y: 25.5
+    x: 1,
+    y: 1
 };
+
+var ghost = {
+    x: 8,
+    y: 7
+}
+
+
+var score = 0;
 
 function displayWorld() {
     var output= "";
@@ -30,8 +38,12 @@ function displayWorld() {
                 output+="<div class='brick'></div>" // \n\t is adding a new line and a new tab each time the if runs.
             else if(world[i][j] == 1) 
                 output+="<div class='coin'></div>"
-            if(world[i][j] == 0) 
+            else if(world[i][j] == 0) 
                 output+="<div class='empty'></div>"
+            else if (world[i][j] == 3)
+                output+="<div class='cherry'></div>"
+            else if (world[i][j] == 4)
+                output+="<div id='ghost'></div>"
         }
         output += "\n</div>";
     }
@@ -39,25 +51,100 @@ function displayWorld() {
     document.getElementById('world').innerHTML = output;
 }
 function displayPacman() {
-    document.getElementById('pacman').style.top = pacman.y+"px"
-    document.getElementById('pacman').style.left = pacman.x+"px"
+    document.getElementById('pacman').style.top = pacman.y*25.25+"px"
+    document.getElementById('pacman').style.left = pacman.x*21.25+"px"
 }
 
-displayPacman()
+function displayScore() {
+    document.getElementById('score').innerHTML = score;
+}
+
+console.log(ghost.x ,ghost.y)
+function moveGhost() {
+    var ghostElement = document.getElementById('ghost')
+    var ghostMovementDecision = [1,2,3,4]
+    var randomDecision = ghostMovementDecision[Math.floor(Math.random() * ghostMovementDecision.length)]
+    var ghostPositionTop = ghostElement.style.top
+    var ghostPositionLeft = ghostElement.style.left
+    console.log(randomDecision)
+    if (randomDecision == 1 && world[ghost.y][ghost.x-1] != 2) {
+        ghostPositionLeft -= 22.25;
+        ghostElement.style.left = ghostPositionLeft + "px";
+        ghost.x--;
+    }
+    if (randomDecision == 2 && world[ghost.y][ghost.x+1] != 2) {
+        ghostPositionLeft += 22.25;
+        ghostElement.style.left = ghostPositionLeft + "px";
+        ghost.x++;
+    }
+    if (randomDecision == 3) {
+        ghostPositionTop -= 24.5;
+        ghostElement.style.top = ghostPositionTop + "px";
+        ghost.y--;
+    }
+    if (randomDecision == 4 && world[pacman.y+1][pacman.x] != 2) {
+        ghostPositionTop += 24.5;
+        ghostElement.style.top = ghostPositionTop + "px";
+        ghost.y++;
+    }
+    console.log(ghost.x)
+    console.log(ghost.y)
+    // console.log(ghostPositionTop)
+    // console.log(ghostPositionLeft)
+    // console.log(ghostElement.style.top)
+    // console.log(ghostElement.style.left)
+}
+
+
+
 displayWorld();
+displayPacman()
+
 
 document.onkeydown = function(e) {
-    if (e.keyCode == 37) {
-        pacman.x -= 21.25
+    if (e.keyCode == 37 && world[pacman.y][pacman.x-1] != 2) {
+        pacman.x--
     } //left key
-    else if (e.keyCode == 39) {
-        pacman.x += 21.25
+    else if (e.keyCode == 39 && world[pacman.y][pacman.x+1] != 2) {
+        pacman.x++
+    } //right key
+    if (e.keyCode == 38 && world[pacman.y-1][pacman.x] != 2) {
+        pacman.y--
+    } //top key
+    else if (e.keyCode == 40 && world[pacman.y+1][pacman.x] != 2) {
+        pacman.y++
+    } //bottom key
+    if (e.keyCode) {
+        document.getElementById('pacman').style.transform = "rotate(180deg)";
+    } //left key
+    if (e.keyCode == 39) {
+        document.getElementById('pacman').style.transform = "none";
     } //right key
     if (e.keyCode == 38) {
-        pacman.y -= 25.25
+        document.getElementById('pacman').style.transform = "rotate(270deg)";
     } //top key
-    else if (e.keyCode == 40) {
-        pacman.y += 25.25
+    if (e.keyCode == 40) {
+        document.getElementById('pacman').style.transform = "rotate(90deg)";
     } //bottom key
+
+    if(world[pacman.y][pacman.x] == 1)  {//if where the pacman is at right now is equal to 1...
+        world[pacman.y][pacman.x] = 0;//make the coin disappear with class='empty'!
+        score+= 10; //increase score by 10 when eating a coin.  
+        displayScore(); //update score
+        displayWorld();//update the world each time a coin or cherry is eaten to show it's eaten
+    }
+    if(world[pacman.y][pacman.x] == 3)  {//if where the pacman is at right now is equal to 3...
+        world[pacman.y][pacman.x] = 0;//make the cherry disappear with class='empty'!
+        score+= 50; //increase score by 50 when eating a cherry.  
+        displayScore(); //update score
+        displayWorld();//update the world each time a coin or cherry is eaten to show it's eaten
+    }
+    if(world[pacman.y][pacman.x] == 4)  {//if where the pacman is at right now is equal to 4...
+        document.getElementById('pacman').remove();//make the Pacman "die" or disappear with class='empty'!
+        displayWorld();//update the world each time a coin or cherry is eaten to show it's eaten
+    }
+
+    //the only way this works is because var pacman is set to x: 0 and y:0. That way, we both can use index notation to move the pacman AND update the world / when the pacman is somewhere there's a coin.
+
     displayPacman() //you must display the pacman again once you update its location.
 }
